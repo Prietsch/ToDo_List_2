@@ -1,125 +1,825 @@
-// ... (o JavaScript anterior permanece o mesmo, apenas adicionar estas funções no final da classe TodoApp)
-
-// Adicionar estas funções à classe TodoApp:
-
-// Atualizar data atual
-updateCurrentDate() {
-    const now = new Date();
-    const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    };
-    const dateString = now.toLocaleDateString('pt-BR', options);
-    document.getElementById('currentDate').textContent = dateString;
+/* Reset e Variáveis */
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #8b5cf6;
+    --secondary: #06d6a0;
+    --secondary-dark: #05b384;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #334155;
+    --bg-hover: #475569;
+    
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    
+    --border: #475569;
+    --border-light: #64748b;
+    
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+    
+    --radius: 12px;
+    --radius-lg: 16px;
 }
 
-// Configurar tabs
-setupTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabName = btn.getAttribute('data-tab');
-            
-            // Atualizar botões
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Atualizar panes
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            document.getElementById(`${tabName}-tasks`).classList.add('active');
-        });
-    });
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-// Atualizar contadores das tabs
-updateTabCounters() {
-    const pendingTasks = this.tasks.filter(task => !task.completed);
-    const completedTasks = this.tasks.filter(task => task.completed);
-    
-    document.getElementById('pendingTabCount').textContent = pendingTasks.length;
-    document.getElementById('completedTabCount').textContent = completedTasks.length;
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #1e1b4b 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
 }
 
-// No método init(), adicionar:
-init() {
-    this.loadFromLocalStorage();
-    this.setupEventListeners();
-    this.setupTabs(); // ← Adicionar esta linha
-    this.updateCurrentDate(); // ← Adicionar esta linha
-    this.renderTasks();
-    this.saveState();
+/* Layout Principal */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
 }
 
-// No método renderTasks(), adicionar no final:
-renderTasks() {
-    // ... código existente ...
-    
-    // Atualizar contadores das tabs
-    this.updateTabCounters();
+.sidebar {
+    width: 320px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
-// Configurar modal personalizado
-setupModal() {
-    const modal = document.getElementById('editTaskModal');
-    const closeBtn = document.getElementById('closeEditModal');
-    const cancelBtn = document.getElementById('cancelEdit');
-    
-    const closeModal = () => {
-        modal.classList.remove('active');
-    };
-    
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    
-    // Fechar modal clicando fora
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
 }
 
-// No setupEventListeners(), adicionar:
-setupEventListeners() {
-    // ... listeners existentes ...
-    
-    this.setupModal(); // ← Adicionar esta linha
+/* Sidebar Styles */
+.sidebar-header {
+    text-align: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
 }
 
-// Modificar o método editTask para usar o modal personalizado:
-editTask(taskId) {
-    const task = this.tasks.find(t => t.id === taskId);
-    if (task) {
-        document.getElementById('editTaskId').value = task.id;
-        document.getElementById('editTaskTitle').value = task.title;
-        document.getElementById('editTaskResponsible').value = task.responsible;
-        document.getElementById('editTaskStartDate').value = task.startDate;
-        document.getElementById('editTaskEndDate').value = task.endDate;
-        document.getElementById('editTaskPriority').value = task.priority;
-        document.getElementById('editTaskDescription').value = task.description;
-        document.getElementById('editTaskObservations').value = task.observations;
+.app-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-bottom: 0.5rem;
+}
 
-        // Abrir modal personalizado
-        document.getElementById('editTaskModal').classList.add('active');
+.app-logo i {
+    font-size: 2rem;
+}
+
+.app-tagline {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-family: 'Quicksand', sans-serif;
+}
+
+/* Stats Card */
+.stats-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.stat-item:first-child {
+    border-bottom: 1px solid var(--border);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.stat-icon.pending {
+    background: linear-gradient(135deg, var(--warning), #f97316);
+    color: white;
+}
+
+.stat-icon.completed {
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-family: 'Quicksand', sans-serif;
+}
+
+/* Controls */
+.controls-section h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 600;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.control-btn.outline {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.control-btn.outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.control-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+}
+
+.control-btn.secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 2px solid var(--border-light);
+}
+
+.control-btn.danger {
+    background: transparent;
+    color: var(--danger);
+    border: 2px solid var(--danger);
+}
+
+.control-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.shortcut-hint {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Quicksand', sans-serif;
+}
+
+kbd {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Main Content */
+.content-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.content-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.date-display {
+    font-family: 'Quicksand', sans-serif;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Form Styles */
+.form-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+}
+
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-header i {
+    color: var(--primary-light);
+    font-size: 1.5rem;
+}
+
+.form-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Quicksand', sans-serif;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-family: 'Quicksand', sans-serif;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--border);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+/* Tasks Section */
+.tasks-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.tasks-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.tab-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.clean-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 2px solid var(--danger);
+    border-radius: 8px;
+    color: var(--danger);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clean-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.tasks-content {
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.tasks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Task Card */
+.task-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    border-left: 4px solid var(--border);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--border);
+}
+
+.task-card.priority-high::before {
+    background: linear-gradient(90deg, var(--danger), #dc2626);
+}
+
+.task-card.priority-medium::before {
+    background: linear-gradient(90deg, var(--warning), #d97706);
+}
+
+.task-card.priority-low::before {
+    background: linear-gradient(90deg, var(--success), #059669);
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.task-header {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.task-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Quicksand', sans-serif;
+}
+
+.priority-high .priority-badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.priority-medium .priority-badge {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+.priority-low .priority-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.task-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.meta-item i {
+    color: var(--primary-light);
+    width: 16px;
+}
+
+.task-description {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.task-observations {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.observations-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.observations-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.action-btn.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.action-btn.primary {
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--primary);
+}
+
+.action-btn.danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-family: 'Quicksand', sans-serif;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 2rem;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Quicksand', sans-serif;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .app-wrapper {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .controls-grid {
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
-// Modificar o método saveEditedTask para fechar o modal personalizado:
-saveEditedTask() {
-    const taskId = parseInt(document.getElementById('editTaskId').value);
-    const task = this.tasks.find(t => t.id === taskId);
-    
-    if (task) {
-        this.saveState();
-        
-        // ... resto do código existente ...
-        
-        // Fechar modal personalizado
-        document.getElementById('editTaskModal').classList.remove('active');
-        this.showAlert('Tarefa atualizada com sucesso!', 'success');
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1rem;
     }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tasks-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .controls-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .tasks-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .tasks-tabs {
+        order: 2;
+    }
+    
+    .clean-btn {
+        order: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .form-container,
+    .tasks-container {
+        padding: 1.5rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1.5rem;
+    }
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.task-card {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--border-light);
 }
