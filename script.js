@@ -19,9 +19,6 @@ class TodoApp {
     constructor() {
         this.tasks = [];
         this.nextId = 1;
-        this.stateHistory = [];
-        this.currentStateIndex = -1;
-        this.maxHistoryStates = 20;
         this.init();
     }
 
@@ -32,7 +29,6 @@ class TodoApp {
         this.setupModal();
         this.updateCurrentDate();
         this.renderTasks();
-        this.saveState();
     }
 
     // Configurar event listeners
@@ -60,7 +56,6 @@ class TodoApp {
         document.getElementById('loadData').addEventListener('click', () => {
             this.loadFromLocalStorage();
             this.renderTasks();
-            this.saveState();
         });
 
         document.getElementById('clearData').addEventListener('click', () => {
@@ -75,28 +70,6 @@ class TodoApp {
         // Botão para salvar edição de tarefa
         document.getElementById('saveEditTask').addEventListener('click', () => {
             this.saveEditedTask();
-        });
-
-        // Botões desfazer/refazer
-        document.getElementById('undoBtn').addEventListener('click', () => {
-            this.undo();
-        });
-        
-        document.getElementById('redoBtn').addEventListener('click', () => {
-            this.redo();
-        });
-        
-        // Atalhos de teclado
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-                if (e.key === 'z' || e.key === 'Z') {
-                    e.preventDefault();
-                    this.undo();
-                } else if (e.key === 'y' || e.key === 'Y') {
-                    e.preventDefault();
-                    this.redo();
-                }
-            }
         });
 
         // Validação de caracteres nos campos de texto
@@ -183,97 +156,22 @@ class TodoApp {
     // Atualizar data atual
     updateCurrentDate() {
         const now = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        };
-        const dateString = now.toLocaleDateString('pt-BR', options);
+        const optionsDay = { weekday: 'long' };
+        const optionsDate = { day: 'numeric', month: 'long', year: 'numeric' };
+        
+        const dayString = now.toLocaleDateString('pt-BR', optionsDay);
+        const dateString = now.toLocaleDateString('pt-BR', optionsDate);
+        
+        const dayElement = document.getElementById('currentDay');
         const dateElement = document.getElementById('currentDate');
-        if (dateElement) {
-            dateElement.textContent = dateString;
-        }
+        
+        if (dayElement) dayElement.textContent = this.capitalizeFirst(dayString);
+        if (dateElement) dateElement.textContent = dateString;
     }
 
-    // Salvar estado atual no histórico
-    saveState() {
-        // Remove estados "futuros" se estamos no meio do histórico
-        if (this.currentStateIndex < this.stateHistory.length - 1) {
-            this.stateHistory = this.stateHistory.slice(0, this.currentStateIndex + 1);
-        }
-        
-        // Salva o estado atual
-        const currentState = {
-            tasks: JSON.parse(JSON.stringify(this.tasks)), // Deep clone
-            nextId: this.nextId,
-            timestamp: new Date().toISOString()
-        };
-        
-        this.stateHistory.push(currentState);
-        this.currentStateIndex = this.stateHistory.length - 1;
-        
-        // Limita o tamanho do histórico
-        if (this.stateHistory.length > this.maxHistoryStates) {
-            this.stateHistory.shift();
-            this.currentStateIndex--;
-        }
-        
-        this.updateUndoRedoButtons();
-    }
-
-    // Desfazer (CTRL+Z)
-    undo() {
-        if (this.currentStateIndex > 0) {
-            this.currentStateIndex--;
-            this.loadState(this.currentStateIndex);
-            this.showAlert('Ação desfeita!', 'info');
-        } else {
-            this.showAlert('Não há mais ações para desfazer.', 'warning');
-        }
-    }
-
-    // Refazer (CTRL+Y)
-    redo() {
-        if (this.currentStateIndex < this.stateHistory.length - 1) {
-            this.currentStateIndex++;
-            this.loadState(this.currentStateIndex);
-            this.showAlert('Ação refeita!', 'info');
-        } else {
-            this.showAlert('Não há mais ações para refazer.', 'warning');
-        }
-    }
-
-    // Carregar estado específico
-    loadState(index) {
-        const state = this.stateHistory[index];
-        if (state) {
-            this.tasks = state.tasks.map(task => {
-                return new Task(
-                    task.id,
-                    task.title,
-                    task.responsible,
-                    task.startDate,
-                    task.endDate,
-                    task.priority,
-                    task.description || '',
-                    task.observations || '',
-                    task.completed || false
-                );
-            });
-            this.nextId = state.nextId || this.tasks.length + 1;
-            this.renderTasks();
-            this.updateUndoRedoButtons();
-        }
-    }
-
-    // Atualizar visibilidade dos botões desfazer/refazer
-    updateUndoRedoButtons() {
-        const undoBtn = document.getElementById('undoBtn');
-        const redoBtn = document.getElementById('redoBtn');
-        
-        if (undoBtn) undoBtn.disabled = this.currentStateIndex <= 0;
-        if (redoBtn) redoBtn.disabled = this.currentStateIndex >= this.stateHistory.length - 1;
+    // Capitalizar primeira letra
+    capitalizeFirst(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     // Adicionar uma nova tarefa
@@ -298,9 +196,6 @@ class TodoApp {
             return;
         }
 
-        // Salvar estado antes da modificação
-        this.saveState();
-
         // Criar nova tarefa
         const task = new Task(
             this.nextId++,
@@ -323,9 +218,6 @@ class TodoApp {
     markTaskAsCompleted(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
-            // Salvar estado antes da modificação
-            this.saveState();
-            
             task.completed = true;
             this.renderTasks();
             this.showAlert('Tarefa marcada como concluída!', 'success');
@@ -335,9 +227,6 @@ class TodoApp {
     // Excluir tarefa
     deleteTask(taskId) {
         if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-            // Salvar estado antes da modificação
-            this.saveState();
-            
             this.tasks = this.tasks.filter(t => t.id !== taskId);
             this.renderTasks();
             this.showAlert('Tarefa excluída com sucesso!', 'success');
@@ -368,9 +257,6 @@ class TodoApp {
         const task = this.tasks.find(t => t.id === taskId);
         
         if (task) {
-            // Salvar estado antes da modificação
-            this.saveState();
-            
             task.title = document.getElementById('editTaskTitle').value.trim();
             task.responsible = document.getElementById('editTaskResponsible').value.trim();
             task.startDate = document.getElementById('editTaskStartDate').value;
@@ -401,9 +287,6 @@ class TodoApp {
     // Excluir todas as tarefas concluídas
     clearCompletedTasks() {
         if (confirm('Tem certeza que deseja excluir todas as tarefas concluídas? Esta ação não pode ser desfeita.')) {
-            // Salvar estado antes da modificação
-            this.saveState();
-            
             this.tasks = this.tasks.filter(t => !t.completed);
             this.renderTasks();
             this.showAlert('Todas as tarefas concluídas foram excluídas.', 'success');
@@ -459,8 +342,6 @@ class TodoApp {
     createTaskCard(task) {
         const taskElement = document.createElement('div');
         taskElement.className = `task-card priority-${task.priority}`;
-        
-        const priorityClass = `priority-${task.priority}`;
         
         taskElement.innerHTML = `
             <div class="task-header">
@@ -652,7 +533,7 @@ class TodoApp {
             success: 'linear-gradient(135deg, #10b981, #059669)',
             warning: 'linear-gradient(135deg, #f59e0b, #d97706)',
             danger: 'linear-gradient(135deg, #ef4444, #dc2626)',
-            info: 'linear-gradient(135deg, #6366f1, #4f46e5)'
+            info: 'linear-gradient(135deg, #3b82f6, #2563eb)'
         };
         return colors[type] || colors.info;
     }
@@ -710,10 +591,7 @@ class TodoApp {
             localStorage.removeItem('todoAppData');
             this.tasks = [];
             this.nextId = 1;
-            this.stateHistory = [];
-            this.currentStateIndex = -1;
             this.renderTasks();
-            this.saveState();
             this.showAlert('Dados do localStorage foram limpos com sucesso!', 'success');
         }
     }
