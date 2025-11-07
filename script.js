@@ -34,43 +34,69 @@ class TodoApp {
     // Configurar event listeners
     setupEventListeners() {
         // Formulário de adição de tarefa
-        document.getElementById('taskForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addTask();
-        });
+        const taskForm = document.getElementById('taskForm');
+        if (taskForm) {
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.addTask();
+            });
+        }
 
         // Validação de datas
-        document.getElementById('taskStartDate').addEventListener('change', () => {
-            this.validateDates('taskStartDate', 'taskEndDate');
-        });
+        const startDateInput = document.getElementById('taskStartDate');
+        const endDateInput = document.getElementById('taskEndDate');
+        
+        if (startDateInput) {
+            startDateInput.addEventListener('change', () => {
+                this.validateDates('taskStartDate', 'taskEndDate');
+            });
+        }
 
-        document.getElementById('taskEndDate').addEventListener('change', () => {
-            this.validateDates('taskStartDate', 'taskEndDate');
-        });
+        if (endDateInput) {
+            endDateInput.addEventListener('change', () => {
+                this.validateDates('taskStartDate', 'taskEndDate');
+            });
+        }
 
         // Botões de controle de dados
-        document.getElementById('saveData').addEventListener('click', () => {
-            this.saveToLocalStorage();
-        });
+        const saveDataBtn = document.getElementById('saveData');
+        const loadDataBtn = document.getElementById('loadData');
+        const clearDataBtn = document.getElementById('clearData');
+        
+        if (saveDataBtn) {
+            saveDataBtn.addEventListener('click', () => {
+                this.saveToLocalStorage();
+            });
+        }
 
-        document.getElementById('loadData').addEventListener('click', () => {
-            this.loadFromLocalStorage();
-            this.renderTasks();
-        });
+        if (loadDataBtn) {
+            loadDataBtn.addEventListener('click', () => {
+                this.loadFromLocalStorage();
+                this.renderTasks();
+            });
+        }
 
-        document.getElementById('clearData').addEventListener('click', () => {
-            this.clearLocalStorage();
-        });
+        if (clearDataBtn) {
+            clearDataBtn.addEventListener('click', () => {
+                this.clearLocalStorage();
+            });
+        }
 
         // Botão para excluir tarefas concluídas
-        document.getElementById('clearCompleted').addEventListener('click', () => {
-            this.clearCompletedTasks();
-        });
+        const clearCompletedBtn = document.getElementById('clearCompleted');
+        if (clearCompletedBtn) {
+            clearCompletedBtn.addEventListener('click', () => {
+                this.clearCompletedTasks();
+            });
+        }
 
         // Botão para salvar edição de tarefa
-        document.getElementById('saveEditTask').addEventListener('click', () => {
-            this.saveEditedTask();
-        });
+        const saveEditTaskBtn = document.getElementById('saveEditTask');
+        if (saveEditTaskBtn) {
+            saveEditTaskBtn.addEventListener('click', () => {
+                this.saveEditedTask();
+            });
+        }
 
         // Validação de caracteres nos campos de texto
         this.setupInputValidation();
@@ -84,38 +110,48 @@ class TodoApp {
         const observationsInput = document.getElementById('taskObservations');
 
         // Validar título
-        titleInput.addEventListener('input', () => {
-            if (titleInput.value.length > 100) {
-                titleInput.value = titleInput.value.substring(0, 100);
-            }
-        });
+        if (titleInput) {
+            titleInput.addEventListener('input', () => {
+                if (titleInput.value.length > 100) {
+                    titleInput.value = titleInput.value.substring(0, 100);
+                }
+            });
+        }
 
         // Validar responsável
-        responsibleInput.addEventListener('input', () => {
-            if (responsibleInput.value.length > 50) {
-                responsibleInput.value = responsibleInput.value.substring(0, 50);
-            }
-        });
+        if (responsibleInput) {
+            responsibleInput.addEventListener('input', () => {
+                if (responsibleInput.value.length > 50) {
+                    responsibleInput.value = responsibleInput.value.substring(0, 50);
+                }
+            });
+        }
 
         // Validar descrição
-        descriptionInput.addEventListener('input', () => {
-            if (descriptionInput.value.length > 500) {
-                descriptionInput.value = descriptionInput.value.substring(0, 500);
-            }
-        });
+        if (descriptionInput) {
+            descriptionInput.addEventListener('input', () => {
+                if (descriptionInput.value.length > 500) {
+                    descriptionInput.value = descriptionInput.value.substring(0, 500);
+                }
+            });
+        }
 
         // Validar observações
-        observationsInput.addEventListener('input', () => {
-            if (observationsInput.value.length > 300) {
-                observationsInput.value = observationsInput.value.substring(0, 300);
-            }
-        });
+        if (observationsInput) {
+            observationsInput.addEventListener('input', () => {
+                if (observationsInput.value.length > 300) {
+                    observationsInput.value = observationsInput.value.substring(0, 300);
+                }
+            });
+        }
     }
 
     // Configurar tabs
     setupTabs() {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        if (tabBtns.length === 0) return;
         
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -127,7 +163,10 @@ class TodoApp {
                 
                 // Atualizar panes
                 tabPanes.forEach(pane => pane.classList.remove('active'));
-                document.getElementById(`${tabName}-tasks`).classList.add('active');
+                const targetPane = document.getElementById(`${tabName}-tasks`);
+                if (targetPane) {
+                    targetPane.classList.add('active');
+                }
             });
         });
     }
@@ -137,6 +176,8 @@ class TodoApp {
         const modal = document.getElementById('editTaskModal');
         const closeBtn = document.getElementById('closeEditModal');
         const cancelBtn = document.getElementById('cancelEdit');
+        
+        if (!modal) return;
         
         const closeModal = () => {
             modal.classList.remove('active');
@@ -176,13 +217,26 @@ class TodoApp {
 
     // Adicionar uma nova tarefa
     addTask() {
-        const title = document.getElementById('taskTitle').value.trim();
-        const responsible = document.getElementById('taskResponsible').value.trim();
-        const startDate = document.getElementById('taskStartDate').value;
-        const endDate = document.getElementById('taskEndDate').value;
-        const priority = document.getElementById('taskPriority').value;
-        const description = document.getElementById('taskDescription').value.trim();
-        const observations = document.getElementById('taskObservations').value.trim();
+        const titleInput = document.getElementById('taskTitle');
+        const responsibleInput = document.getElementById('taskResponsible');
+        const startDateInput = document.getElementById('taskStartDate');
+        const endDateInput = document.getElementById('taskEndDate');
+        const prioritySelect = document.getElementById('taskPriority');
+        const descriptionInput = document.getElementById('taskDescription');
+        const observationsInput = document.getElementById('taskObservations');
+
+        if (!titleInput || !responsibleInput || !startDateInput || !endDateInput || !prioritySelect) {
+            this.showAlert('Erro: Campos do formulário não encontrados.', 'danger');
+            return;
+        }
+
+        const title = titleInput.value.trim();
+        const responsible = responsibleInput.value.trim();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        const priority = prioritySelect.value;
+        const description = descriptionInput ? descriptionInput.value.trim() : '';
+        const observations = observationsInput ? observationsInput.value.trim() : '';
 
         // Validação básica
         if (!title || !responsible || !startDate || !endDate || !priority) {
@@ -210,7 +264,13 @@ class TodoApp {
 
         this.tasks.push(task);
         this.renderTasks();
-        document.getElementById('taskForm').reset();
+        
+        // Reset do formulário
+        const taskForm = document.getElementById('taskForm');
+        if (taskForm) {
+            taskForm.reset();
+        }
+        
         this.showAlert('Tarefa adicionada com sucesso!', 'success');
     }
 
@@ -237,33 +297,57 @@ class TodoApp {
     editTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
-            document.getElementById('editTaskId').value = task.id;
-            document.getElementById('editTaskTitle').value = task.title;
-            document.getElementById('editTaskResponsible').value = task.responsible;
-            document.getElementById('editTaskStartDate').value = task.startDate;
-            document.getElementById('editTaskEndDate').value = task.endDate;
-            document.getElementById('editTaskPriority').value = task.priority;
-            document.getElementById('editTaskDescription').value = task.description;
-            document.getElementById('editTaskObservations').value = task.observations;
+            // Preencher formulário de edição
+            const editTaskId = document.getElementById('editTaskId');
+            const editTaskTitle = document.getElementById('editTaskTitle');
+            const editTaskResponsible = document.getElementById('editTaskResponsible');
+            const editTaskStartDate = document.getElementById('editTaskStartDate');
+            const editTaskEndDate = document.getElementById('editTaskEndDate');
+            const editTaskPriority = document.getElementById('editTaskPriority');
+            const editTaskDescription = document.getElementById('editTaskDescription');
+            const editTaskObservations = document.getElementById('editTaskObservations');
+
+            if (editTaskId) editTaskId.value = task.id;
+            if (editTaskTitle) editTaskTitle.value = task.title;
+            if (editTaskResponsible) editTaskResponsible.value = task.responsible;
+            if (editTaskStartDate) editTaskStartDate.value = task.startDate;
+            if (editTaskEndDate) editTaskEndDate.value = task.endDate;
+            if (editTaskPriority) editTaskPriority.value = task.priority;
+            if (editTaskDescription) editTaskDescription.value = task.description;
+            if (editTaskObservations) editTaskObservations.value = task.observations;
 
             // Abrir modal personalizado
-            document.getElementById('editTaskModal').classList.add('active');
+            const modal = document.getElementById('editTaskModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
         }
     }
 
     // Salvar tarefa editada
     saveEditedTask() {
-        const taskId = parseInt(document.getElementById('editTaskId').value);
+        const editTaskId = document.getElementById('editTaskId');
+        if (!editTaskId) return;
+
+        const taskId = parseInt(editTaskId.value);
         const task = this.tasks.find(t => t.id === taskId);
         
         if (task) {
-            task.title = document.getElementById('editTaskTitle').value.trim();
-            task.responsible = document.getElementById('editTaskResponsible').value.trim();
-            task.startDate = document.getElementById('editTaskStartDate').value;
-            task.endDate = document.getElementById('editTaskEndDate').value;
-            task.priority = document.getElementById('editTaskPriority').value;
-            task.description = document.getElementById('editTaskDescription').value.trim();
-            task.observations = document.getElementById('editTaskObservations').value.trim();
+            const editTaskTitle = document.getElementById('editTaskTitle');
+            const editTaskResponsible = document.getElementById('editTaskResponsible');
+            const editTaskStartDate = document.getElementById('editTaskStartDate');
+            const editTaskEndDate = document.getElementById('editTaskEndDate');
+            const editTaskPriority = document.getElementById('editTaskPriority');
+            const editTaskDescription = document.getElementById('editTaskDescription');
+            const editTaskObservations = document.getElementById('editTaskObservations');
+
+            if (editTaskTitle) task.title = editTaskTitle.value.trim();
+            if (editTaskResponsible) task.responsible = editTaskResponsible.value.trim();
+            if (editTaskStartDate) task.startDate = editTaskStartDate.value;
+            if (editTaskEndDate) task.endDate = editTaskEndDate.value;
+            if (editTaskPriority) task.priority = editTaskPriority.value;
+            if (editTaskDescription) task.description = editTaskDescription.value.trim();
+            if (editTaskObservations) task.observations = editTaskObservations.value.trim();
 
             // Validação
             if (!task.title || !task.responsible || !task.startDate || !task.endDate) {
@@ -279,7 +363,10 @@ class TodoApp {
             this.renderTasks();
             
             // Fechar modal personalizado
-            document.getElementById('editTaskModal').classList.remove('active');
+            const modal = document.getElementById('editTaskModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
             this.showAlert('Tarefa atualizada com sucesso!', 'success');
         }
     }
@@ -432,15 +519,17 @@ class TodoApp {
 
     // Validar datas
     validateDates(startDateId, endDateId) {
-        const startDate = document.getElementById(startDateId).value;
-        const endDate = document.getElementById(endDateId).value;
+        const startDate = document.getElementById(startDateId);
+        const endDate = document.getElementById(endDateId);
         
-        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-            document.getElementById(endDateId).classList.add('is-invalid');
-            document.getElementById(startDateId).classList.add('is-invalid');
+        if (!startDate || !endDate) return;
+        
+        if (startDate.value && endDate.value && new Date(endDate.value) < new Date(startDate.value)) {
+            endDate.classList.add('is-invalid');
+            startDate.classList.add('is-invalid');
         } else {
-            document.getElementById(endDateId).classList.remove('is-invalid');
-            document.getElementById(startDateId).classList.remove('is-invalid');
+            endDate.classList.remove('is-invalid');
+            startDate.classList.remove('is-invalid');
         }
     }
 
