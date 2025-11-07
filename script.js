@@ -23,18 +23,32 @@ class TodoApp {
     }
 
     init() {
-        this.loadFromLocalStorage();
-        this.setupEventListeners();
-        this.setupTabs();
-        this.setupModal();
-        this.updateCurrentDate();
-        this.renderTasks();
+        // Aguardar um pouco para garantir que o DOM está completamente carregado
+        setTimeout(() => {
+            this.loadFromLocalStorage();
+            this.setupEventListeners();
+            this.setupTabs();
+            this.setupModal();
+            this.updateCurrentDate();
+            this.renderTasks();
+        }, 100);
+    }
+
+    // Função auxiliar para obter elementos de forma segura
+    getElement(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Elemento com ID '${id}' não encontrado`);
+        }
+        return element;
     }
 
     // Configurar event listeners
     setupEventListeners() {
+        console.log('Configurando event listeners...');
+
         // Formulário de adição de tarefa
-        const taskForm = document.getElementById('taskForm');
+        const taskForm = this.getElement('taskForm');
         if (taskForm) {
             taskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -43,8 +57,8 @@ class TodoApp {
         }
 
         // Validação de datas
-        const startDateInput = document.getElementById('taskStartDate');
-        const endDateInput = document.getElementById('taskEndDate');
+        const startDateInput = this.getElement('taskStartDate');
+        const endDateInput = this.getElement('taskEndDate');
         
         if (startDateInput) {
             startDateInput.addEventListener('change', () => {
@@ -59,9 +73,9 @@ class TodoApp {
         }
 
         // Botões de controle de dados
-        const saveDataBtn = document.getElementById('saveData');
-        const loadDataBtn = document.getElementById('loadData');
-        const clearDataBtn = document.getElementById('clearData');
+        const saveDataBtn = this.getElement('saveData');
+        const loadDataBtn = this.getElement('loadData');
+        const clearDataBtn = this.getElement('clearData');
         
         if (saveDataBtn) {
             saveDataBtn.addEventListener('click', () => {
@@ -83,7 +97,7 @@ class TodoApp {
         }
 
         // Botão para excluir tarefas concluídas
-        const clearCompletedBtn = document.getElementById('clearCompleted');
+        const clearCompletedBtn = this.getElement('clearCompleted');
         if (clearCompletedBtn) {
             clearCompletedBtn.addEventListener('click', () => {
                 this.clearCompletedTasks();
@@ -91,7 +105,7 @@ class TodoApp {
         }
 
         // Botão para salvar edição de tarefa
-        const saveEditTaskBtn = document.getElementById('saveEditTask');
+        const saveEditTaskBtn = this.getElement('saveEditTask');
         if (saveEditTaskBtn) {
             saveEditTaskBtn.addEventListener('click', () => {
                 this.saveEditedTask();
@@ -100,14 +114,16 @@ class TodoApp {
 
         // Validação de caracteres nos campos de texto
         this.setupInputValidation();
+
+        console.log('Event listeners configurados com sucesso');
     }
 
     // Configurar validação de inputs
     setupInputValidation() {
-        const titleInput = document.getElementById('taskTitle');
-        const responsibleInput = document.getElementById('taskResponsible');
-        const descriptionInput = document.getElementById('taskDescription');
-        const observationsInput = document.getElementById('taskObservations');
+        const titleInput = this.getElement('taskTitle');
+        const responsibleInput = this.getElement('taskResponsible');
+        const descriptionInput = this.getElement('taskDescription');
+        const observationsInput = this.getElement('taskObservations');
 
         // Validar título
         if (titleInput) {
@@ -151,7 +167,10 @@ class TodoApp {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
         
-        if (tabBtns.length === 0) return;
+        if (tabBtns.length === 0) {
+            console.warn('Nenhum botão de tab encontrado');
+            return;
+        }
         
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -173,18 +192,26 @@ class TodoApp {
 
     // Configurar modal personalizado
     setupModal() {
-        const modal = document.getElementById('editTaskModal');
-        const closeBtn = document.getElementById('closeEditModal');
-        const cancelBtn = document.getElementById('cancelEdit');
+        const modal = this.getElement('editTaskModal');
+        const closeBtn = this.getElement('closeEditModal');
+        const cancelBtn = this.getElement('cancelEdit');
         
-        if (!modal) return;
+        if (!modal) {
+            console.warn('Modal de edição não encontrado');
+            return;
+        }
         
         const closeModal = () => {
             modal.classList.remove('active');
         };
         
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeModal);
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeModal);
+        }
         
         // Fechar modal clicando fora
         modal.addEventListener('click', (e) => {
@@ -203,8 +230,8 @@ class TodoApp {
         const dayString = now.toLocaleDateString('pt-BR', optionsDay);
         const dateString = now.toLocaleDateString('pt-BR', optionsDate);
         
-        const dayElement = document.getElementById('currentDay');
-        const dateElement = document.getElementById('currentDate');
+        const dayElement = this.getElement('currentDay');
+        const dateElement = this.getElement('currentDate');
         
         if (dayElement) dayElement.textContent = this.capitalizeFirst(dayString);
         if (dateElement) dateElement.textContent = dateString;
@@ -217,26 +244,13 @@ class TodoApp {
 
     // Adicionar uma nova tarefa
     addTask() {
-        const titleInput = document.getElementById('taskTitle');
-        const responsibleInput = document.getElementById('taskResponsible');
-        const startDateInput = document.getElementById('taskStartDate');
-        const endDateInput = document.getElementById('taskEndDate');
-        const prioritySelect = document.getElementById('taskPriority');
-        const descriptionInput = document.getElementById('taskDescription');
-        const observationsInput = document.getElementById('taskObservations');
-
-        if (!titleInput || !responsibleInput || !startDateInput || !endDateInput || !prioritySelect) {
-            this.showAlert('Erro: Campos do formulário não encontrados.', 'danger');
-            return;
-        }
-
-        const title = titleInput.value.trim();
-        const responsible = responsibleInput.value.trim();
-        const startDate = startDateInput.value;
-        const endDate = endDateInput.value;
-        const priority = prioritySelect.value;
-        const description = descriptionInput ? descriptionInput.value.trim() : '';
-        const observations = observationsInput ? observationsInput.value.trim() : '';
+        const title = this.getElement('taskTitle')?.value.trim();
+        const responsible = this.getElement('taskResponsible')?.value.trim();
+        const startDate = this.getElement('taskStartDate')?.value;
+        const endDate = this.getElement('taskEndDate')?.value;
+        const priority = this.getElement('taskPriority')?.value;
+        const description = this.getElement('taskDescription')?.value.trim() || '';
+        const observations = this.getElement('taskObservations')?.value.trim() || '';
 
         // Validação básica
         if (!title || !responsible || !startDate || !endDate || !priority) {
@@ -266,7 +280,7 @@ class TodoApp {
         this.renderTasks();
         
         // Reset do formulário
-        const taskForm = document.getElementById('taskForm');
+        const taskForm = this.getElement('taskForm');
         if (taskForm) {
             taskForm.reset();
         }
@@ -298,26 +312,17 @@ class TodoApp {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
             // Preencher formulário de edição
-            const editTaskId = document.getElementById('editTaskId');
-            const editTaskTitle = document.getElementById('editTaskTitle');
-            const editTaskResponsible = document.getElementById('editTaskResponsible');
-            const editTaskStartDate = document.getElementById('editTaskStartDate');
-            const editTaskEndDate = document.getElementById('editTaskEndDate');
-            const editTaskPriority = document.getElementById('editTaskPriority');
-            const editTaskDescription = document.getElementById('editTaskDescription');
-            const editTaskObservations = document.getElementById('editTaskObservations');
-
-            if (editTaskId) editTaskId.value = task.id;
-            if (editTaskTitle) editTaskTitle.value = task.title;
-            if (editTaskResponsible) editTaskResponsible.value = task.responsible;
-            if (editTaskStartDate) editTaskStartDate.value = task.startDate;
-            if (editTaskEndDate) editTaskEndDate.value = task.endDate;
-            if (editTaskPriority) editTaskPriority.value = task.priority;
-            if (editTaskDescription) editTaskDescription.value = task.description;
-            if (editTaskObservations) editTaskObservations.value = task.observations;
+            this.getElement('editTaskId').value = task.id;
+            this.getElement('editTaskTitle').value = task.title;
+            this.getElement('editTaskResponsible').value = task.responsible;
+            this.getElement('editTaskStartDate').value = task.startDate;
+            this.getElement('editTaskEndDate').value = task.endDate;
+            this.getElement('editTaskPriority').value = task.priority;
+            this.getElement('editTaskDescription').value = task.description;
+            this.getElement('editTaskObservations').value = task.observations;
 
             // Abrir modal personalizado
-            const modal = document.getElementById('editTaskModal');
+            const modal = this.getElement('editTaskModal');
             if (modal) {
                 modal.classList.add('active');
             }
@@ -326,28 +331,19 @@ class TodoApp {
 
     // Salvar tarefa editada
     saveEditedTask() {
-        const editTaskId = document.getElementById('editTaskId');
-        if (!editTaskId) return;
+        const taskId = parseInt(this.getElement('editTaskId')?.value);
+        if (!taskId) return;
 
-        const taskId = parseInt(editTaskId.value);
         const task = this.tasks.find(t => t.id === taskId);
         
         if (task) {
-            const editTaskTitle = document.getElementById('editTaskTitle');
-            const editTaskResponsible = document.getElementById('editTaskResponsible');
-            const editTaskStartDate = document.getElementById('editTaskStartDate');
-            const editTaskEndDate = document.getElementById('editTaskEndDate');
-            const editTaskPriority = document.getElementById('editTaskPriority');
-            const editTaskDescription = document.getElementById('editTaskDescription');
-            const editTaskObservations = document.getElementById('editTaskObservations');
-
-            if (editTaskTitle) task.title = editTaskTitle.value.trim();
-            if (editTaskResponsible) task.responsible = editTaskResponsible.value.trim();
-            if (editTaskStartDate) task.startDate = editTaskStartDate.value;
-            if (editTaskEndDate) task.endDate = editTaskEndDate.value;
-            if (editTaskPriority) task.priority = editTaskPriority.value;
-            if (editTaskDescription) task.description = editTaskDescription.value.trim();
-            if (editTaskObservations) task.observations = editTaskObservations.value.trim();
+            task.title = this.getElement('editTaskTitle')?.value.trim() || '';
+            task.responsible = this.getElement('editTaskResponsible')?.value.trim() || '';
+            task.startDate = this.getElement('editTaskStartDate')?.value || '';
+            task.endDate = this.getElement('editTaskEndDate')?.value || '';
+            task.priority = this.getElement('editTaskPriority')?.value || '';
+            task.description = this.getElement('editTaskDescription')?.value.trim() || '';
+            task.observations = this.getElement('editTaskObservations')?.value.trim() || '';
 
             // Validação
             if (!task.title || !task.responsible || !task.startDate || !task.endDate) {
@@ -363,7 +359,7 @@ class TodoApp {
             this.renderTasks();
             
             // Fechar modal personalizado
-            const modal = document.getElementById('editTaskModal');
+            const modal = this.getElement('editTaskModal');
             if (modal) {
                 modal.classList.remove('active');
             }
@@ -382,10 +378,10 @@ class TodoApp {
 
     // Renderizar as tarefas na interface
     renderTasks() {
-        const pendingTasksContainer = document.getElementById('pendingTasks');
-        const completedTasksContainer = document.getElementById('completedTasks');
-        const emptyPending = document.getElementById('emptyPending');
-        const emptyCompleted = document.getElementById('emptyCompleted');
+        const pendingTasksContainer = this.getElement('pendingTasks');
+        const completedTasksContainer = this.getElement('completedTasks');
+        const emptyPending = this.getElement('emptyPending');
+        const emptyCompleted = this.getElement('emptyCompleted');
         
         // Limpar containers
         if (pendingTasksContainer) pendingTasksContainer.innerHTML = '';
@@ -396,10 +392,10 @@ class TodoApp {
         const completedTasks = this.tasks.filter(task => task.completed);
         
         // Atualizar contadores
-        const pendingCountElement = document.getElementById('pendingCount');
-        const completedCountElement = document.getElementById('completedCount');
-        const pendingTabCountElement = document.getElementById('pendingTabCount');
-        const completedTabCountElement = document.getElementById('completedTabCount');
+        const pendingCountElement = this.getElement('pendingCount');
+        const completedCountElement = this.getElement('completedCount');
+        const pendingTabCountElement = this.getElement('pendingTabCount');
+        const completedTabCountElement = this.getElement('completedTabCount');
         
         if (pendingCountElement) pendingCountElement.textContent = pendingTasks.length;
         if (completedCountElement) completedCountElement.textContent = completedTasks.length;
@@ -513,14 +509,18 @@ class TodoApp {
 
     // Formatar data para exibição
     formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR');
+        } catch (e) {
+            return 'Data inválida';
+        }
     }
 
     // Validar datas
     validateDates(startDateId, endDateId) {
-        const startDate = document.getElementById(startDateId);
-        const endDate = document.getElementById(endDateId);
+        const startDate = this.getElement(startDateId);
+        const endDate = this.getElement(endDateId);
         
         if (!startDate || !endDate) return;
         
@@ -688,5 +688,6 @@ class TodoApp {
 
 // Inicializar a aplicação quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM carregado, iniciando aplicação...');
     new TodoApp();
 });
